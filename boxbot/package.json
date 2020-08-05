@@ -1,0 +1,31 @@
+{
+  "name": "boxbot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@discordjs/opus": "^0.3.2",
+    "discord.js": "^12.2.0",
+    "dotenv": "^8.2.0",
+    "ffmpeg": "0.0.4",
+    "ffmpeg-static": "^4.2.6",
+    "fluent-ffmpeg": "^2.1.2",
+    "miniget": "^2.0.1",
+    "sequelize": "^6.3.4",
+    "simple-youtube-api": "^5.2.1",
+    "sqlite3": "^5.0.0",
+    "youtube-playlist": "^1.0.4",
+    "ytdl-core": "^3.2.0",
+    "ytdl-core-discord": "^1.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.4"
+  }
+}
