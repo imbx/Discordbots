@@ -9,44 +9,45 @@ module.exports = {
     cooldown: 5,
     voiceChannelOnly: true,
     guildOnly: true,
-    async execute(client, msg, args) {
-        const voiceChannel = msg.member.voice.channel
-        const serverQueue = msg.client.musicQueue.get(msg.guild.id)
+    async execute(client, message, args) {
+        const voiceChannel = message.member.voice.channel
+        let guildID = message.guild.id
+        let queueConstruct =  {
+            textChannel: message.channel,
+            voiceChannel: voiceChannel,
+            message: null,
+            connection: null,
+            songs: [],
+            volume: 5,
+            playing: true
+        };
 
-        var songs = await Music.getVideosFromYT(args[0])
+        let retrievedSongs = Music.getVideosFromYT(args[0])
+        let songs = await retrievedSongs
+        console.log(songs)
+        console.log("fill musicqueue")
+        if(!client.musicQueue) client.musicQueue = new Map();
+        if(client.musicQueue.size < 1) 
+            client.musicQueue.set(guildID, queueConstruct);
 
-        if (!serverQueue) {
-            const queueConstruct = {
-                textChannel: msg.channel,
-                voiceChannel: voiceChannel,
-                message: null,
-                connection: null,
-                songs: [],
-                volume: 5,
-                playing: true
-            }
-
-            msg.client.musicQueue.set(msg.guild.id, queueConstruct)
-            
-            songs.forEach(async element => {
-                await queueConstruct.songs.push(element)
+        console.log("push songs")
+        songs.forEach(element => {
+            console.log(client.musicQueue);
+            client.musicQueue.songs.push(element)
+        })
+        console.log(client.musicQueue)
+        voiceChannel.join()
+            .then(connection => {
+                client.musicQueue.connection = connection
             })
 
-            try {
-                await voiceChannel.join()
-                    .then(connection => {
-                        queueConstruct.connection = connection
-                    })
-                Music.play(msg, queueConstruct.songs[0])
-            } catch (e) {
-                console.log(e)
-                msg.client.musicQueue.delete(msg.guild.id)
-                return msg.channel.send(e)
-            }
-        } else {
-            songs.forEach(async element => {
-                await serverQueue.songs.push(element)
-            })
+        try{
+            Music.play(client, message, await client.musicQueue.songs[0])
+        }
+        catch (e) {
+            console.log(e)
+            client.musicQueue.delete(message.guild.id)
+            message.channel.send(e)
         }
     }
 }

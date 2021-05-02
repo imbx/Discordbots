@@ -1,1 +1,9 @@
 /boxbot/node_modules
+.env
+.vscode
+config.json
+/include/music - copia (2).js
+/include/music - copia.js
+ffmpeg.exe
+ffplay.exe
+ffprobe.exe

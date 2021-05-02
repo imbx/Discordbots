@@ -6,17 +6,19 @@ const Discord = require('discord.js')
 module.exports = {
   async getVideosFromYT(link) {
     console.log("getting vid")
-    return new Promise(async (res) => {
+    return await new Promise((res) => {
       var songs = []
       var thumbnail = null
 
       if (link.startsWith(`https://www.youtube.com/playlist?`)) {
-        await youtube.getPlaylist(link)
+        youtube.getPlaylist(link)
           .then(async playlist => {
             await playlist.getVideos()
-              .then(videos => {
-                videos.forEach(async vid => {
-                  await songs.push(this.getSong(vid, thumbnail))
+              .then(async videos => {
+                await videos.forEach(async vid => {
+                  if (!thumbnail)
+                    thumbnail = await this.getChannelThumbnail(vid.channel.id)
+                  await songs.push(this.fillSongInfo(vid, thumbnail))
                 })
               }).catch(e => {
                 console.log(e)
@@ -27,31 +29,28 @@ module.exports = {
             console.log(e)
           })
       } else if (link.startsWith(`https://www.youtube.com/`)) {
-        await youtube.getVideo(link)
-          .then(vid => {
-            songs.push(this.getSong(vid, thumbnail))
+        youtube.getVideo(link)
+          .then(async vid => {
+            if (!thumbnail)
+              thumbnail = await this.getChannelThumbnail(vid.channel.id)
+            await songs.push(this.fillSongInfo(vid, thumbnail))
             res(songs)
           }).catch(e => {
             console.log(e)
           })
       } else {
-        await youtube.searchVideos(link, 3)
-          .then(vid => {
-            songs.push(this.getSong(vid[0], thumbnail))
+        youtube.searchVideos(link, 3)
+          .then(async vid => {
+            if (!thumbnail)
+              thumbnail = await this.getChannelThumbnail(vid[0].channel.id)
+            await songs.push(this.fillSongInfo(vid[0], thumbnail))
             res(songs)
-            console.log("vid")
-            console.log(songs)
           }).catch(e => {
             console.log(e)
           })
       }
       res(songs)
     })
-  },
-  async getSong(video, thumbnail){
-    if (!thumbnail)
-      thumbnail = await this.getChannelThumbnail(video.channel.id)
-    return await this.fillSongInfo(video, thumbnail)
   },
   getChannelThumbnail(cId) {
     return youtube.getChannelByID(cId)
