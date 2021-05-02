@@ -2,8 +2,9 @@
 .env
 .vscode
 config.json
+*.exe
+*.exe~
+*.dll
 /boxbot/include/music2.js
 /boxbot/include/music1.js
-/boxbot/ffmpeg.exe
-/boxbot/ffplay.exe
-/boxbot/ffprobe.exe
+
