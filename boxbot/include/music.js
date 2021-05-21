@@ -6,53 +6,61 @@ const Discord = require('discord.js')
 module.exports = {
   async getVideosFromYT(link) {
     console.log("getting vid")
+    return await new Promise((res) => {
+      var songs = []
+      var thumbnail = null
 
-    var songs = {}
-    var thumbnail = null
-
-    if (link.startsWith(`https://www.youtube.com/playlist?`))
-    {
-      console.log("vid1")
-      youtube.getPlaylist(link)
-      .then(playlist => {
-        playlist.getVideos()
-          .then(videos => {
-            videos.forEach(vid => {
-              if (!thumbnail)
-                thumbnail = this.getChannelThumbnail(vid.channel.id)
-              songs.push(this.fillSongInfo(vid, thumbnail))
-            })
-          }).catch(e => {console.log(e)}) 
-      }).catch(e => {console.log(e)}) 
-    }
-    else if (link.startsWith(`https://www.youtube.com/`))
-    {
-      console.log("vid2")
-      youtube.getVideo(link)
-      .then(vid => {
-        console.log("found vid")
-        if (!thumbnail)
-          thumbnail = this.getChannelThumbnail(vid.channel.id)
-        songs.push(this.fillSongInfo(vid, thumbnail))
-      }).catch(e => {console.log(e)}) 
-    }
-    else{
-      console.log("vid3")
-      youtube.searchVideos(link, 3)
-      .then(vid => {
-        console.log("found vid")
-        if (!thumbnail)
-          thumbnail = this.getChannelThumbnail(vid[0].channel.id)
-        songs.push(this.fillSongInfo(vid[0], thumbnail))
-      }).catch(e => {console.log(e)}) 
-    }
-    return await songs
+      if (link.startsWith(`https://www.youtube.com/playlist?`)) {
+        console.log("vid1")
+        youtube.getPlaylist(link)
+          .then(async playlist => {
+            await playlist.getVideos()
+              .then(async videos => {
+                await videos.forEach(async vid => {
+                  if (!thumbnail)
+                    thumbnail = await this.getChannelThumbnail(vid.channel.id)
+                  await songs.push(this.fillSongInfo(vid, thumbnail))
+                })
+              }).catch(e => {
+                console.log(e)
+              })
+              res(songs)
+          }).catch(e => {
+            console.log(e)
+          })
+      } else if (link.startsWith(`https://www.youtube.com/`)) {
+        console.log("vid2")
+        youtube.getVideo(link)
+          .then(async vid => {
+            console.log("found vid")
+            if (!thumbnail)
+              thumbnail = await this.getChannelThumbnail(vid.channel.id)
+            await songs.push(this.fillSongInfo(vid, thumbnail))
+            res(songs)
+          }).catch(e => {
+            console.log(e)
+          })
+      } else {
+        console.log("vid3")
+        youtube.searchVideos(link, 3)
+          .then(async vid => {
+            console.log("found vid")
+            if (!thumbnail)
+              thumbnail = await this.getChannelThumbnail(vid[0].channel.id)
+            await songs.push(this.fillSongInfo(vid[0], thumbnail))
+            res(songs)
+          }).catch(e => {
+            console.log(e)
+          })
+      }
+      res(songs)
+    })
   },
   getChannelThumbnail(cId) {
     return youtube.getChannelByID(cId)
-        .then(ch => {
-          return ch.thumbnails.default.url
-        }).catch(e) 
+      .then(async ch => {
+        return await ch.thumbnails
+      }).catch(e => { console.log(e) })
   },
   fillSongInfo(vid, thmb) {
     return {
@@ -60,7 +68,7 @@ module.exports = {
       url: vid.url,
       duration: vid.durationSeconds,
       artist: vid.channel.title,
-      artistThumbnail: thmb
+      artistThumbnail: thmb.default.url
     }
   },
   async play(msg, song) {
@@ -83,13 +91,11 @@ module.exports = {
     let stream = await ytdl(song.url, ytdlOption)
 
     const dispatcher = musicQueue.connection
-      .play(stream, {
-        type: "opus"
-      })
+      .play(stream)
       .on("finish", () => {
         musicQueue.playing = false
         musicQueue.songs.shift()
-        play(msg, musicQueue.songs[0])
+        this.play(msg, musicQueue.songs[0])
       })
       .on("error", error => console.error(error))
     dispatcher.setVolumeLogarithmic(musicQueue.volume / 5)
